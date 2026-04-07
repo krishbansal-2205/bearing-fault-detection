@@ -1,0 +1,51 @@
+# Random seed
+seed: 42
+
+# Data configuration
+data:
+   window_size: 2048
+   overlap: 0.5
+   fs: 12000
+   batch_size: 64
+   num_workers: 0
+
+   # Split method: 'time_based', 'hybrid', or 'file_based'
+   split_method: 'hybrid'
+
+   # Time-based split parameters
+   time_based:
+      train_time_ratio: 0.7 # Use first 70% for training
+      min_signal_length: 10000
+
+   # Hybrid split parameters
+   hybrid:
+      file_train_ratio: 0.7
+      time_train_ratio: 0.7
+
+   # File-based split parameters
+   file_based:
+      train_ratio: 0.75
+
+# Model configuration
+model:
+   num_classes: 10
+   dropout_rate: 0.5
+
+# Training configuration
+training:
+   epochs: 50
+   learning_rate: 0.001
+   weight_decay: 0.01
+   early_stopping_patience: 10
+
+   # Augmentation
+   augment_train: true
+
+   # Logging
+   log_interval: 5
+
+# Paths
+paths:
+   data_dir: './data/cwru'
+   model_dir: './models'
+   experiments_dir: './experiments'
