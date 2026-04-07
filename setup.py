@@ -9,8 +9,6 @@ setup(
     name="bearing-fault-detection",
     version="1.0.0",
     description="Bearing Fault Detection using 1D-CNN with Time-Based Split",
-    author="Your Name",
-    author_email="your.email@example.com",
     packages=find_packages(),
     install_requires=[
         "torch>=2.0.0",
