@@ -187,8 +187,11 @@ def main():
 
     # Final evaluation
     logger.info("\nFinal evaluation on test set...")
-    model.load_state_dict(torch.load(
-        f"{config['paths']['model_dir']}/best_model.pth"))
+    checkpoint = torch.load(
+        f"{config['paths']['model_dir']}/best_model.pth",
+        map_location=device, weights_only=False
+    )
+    model.load_state_dict(checkpoint['model_state_dict'])
     model.to(device)
 
     metrics = evaluate_model(model, test_loader, device)

@@ -116,8 +116,9 @@ class CWRUDataLoader:
             fs = 12000
         else:
             fs = 48000
-            # Downsample to 12 kHz
-            signal = signal[::4]
+            # Downsample to 12 kHz with anti-aliasing filter
+            from scipy.signal import decimate
+            signal = decimate(signal, 4, ftype='fir').astype(np.float32)
             fs = 12000
 
         metadata = {

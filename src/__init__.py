@@ -3,7 +3,7 @@ Bearing Fault Detection Package with Time-Based Splitting.
 """
 
 __version__ = "1.0.0"
-__author__ = "Your Name"
+__author__ = "krishbansal-2205"
 
 import sys
 from pathlib import Path

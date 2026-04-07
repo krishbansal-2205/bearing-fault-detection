@@ -174,7 +174,11 @@ def train_model(
             best_test_acc = test_acc
             patience_counter = 0
             # Save best model
-            torch.save(model.state_dict(), 'models/best_model.pth')
+            import os
+            os.makedirs('models', exist_ok=True)
+            torch.save({
+                'model_state_dict': model.state_dict()
+            }, 'models/best_model.pth')
         else:
             patience_counter += 1
 

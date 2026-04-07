@@ -9,6 +9,7 @@ from src.data.preprocessing import (
     create_windows,
     time_based_split,
     hybrid_split,
+    file_based_split,
     PreprocessingPipeline
 )
 
@@ -19,5 +20,6 @@ __all__ = [
     'create_windows',
     'time_based_split',
     'hybrid_split',
+    'file_based_split',
     'PreprocessingPipeline'
 ]

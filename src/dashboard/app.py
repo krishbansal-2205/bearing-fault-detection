@@ -153,7 +153,8 @@ def load_model():
     for model_path in model_paths:
         if model_path.exists():
             try:
-                checkpoint = torch.load(model_path, map_location='cpu')
+                checkpoint = torch.load(model_path, map_location='cpu',
+                                        weights_only=False)
 
                 if isinstance(checkpoint, dict):
                     if 'model_state_dict' in checkpoint:

@@ -22,7 +22,10 @@ import logging
 from datetime import datetime
 from typing import List, Optional, Dict
 import time
-import onnxruntime as ort
+try:
+    import onnxruntime as ort
+except ImportError:
+    ort = None
 
 from src.models.vibration_cnn import VibrationCNN
 from src.data.preprocessing import bandpass_filter, normalize_signal
@@ -105,6 +108,8 @@ async def load_model():
 
         # Try to load ONNX model first (faster inference)
         try:
+            if ort is None:
+                raise ImportError("onnxruntime not installed")
             ONNX_SESSION = ort.InferenceSession(
                 "models/bearing_fault_detector.onnx",
                 providers=['CPUExecutionProvider']
@@ -117,7 +122,8 @@ async def load_model():
             MODEL = VibrationCNN(num_classes=10)
             checkpoint = torch.load(
                 'models/best_model.pth',
-                map_location=DEVICE
+                map_location=DEVICE,
+                weights_only=False
             )
             MODEL.load_state_dict(checkpoint['model_state_dict'])
             MODEL.to(DEVICE)
@@ -390,7 +396,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "app:app",
+        "src.api.app:app",
         host="0.0.0.0",
         port=8000,
         reload=True,

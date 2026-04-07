@@ -34,9 +34,14 @@ class GradCAM1D:
         self.gradients = None
         self.activations = None
 
-        # Register hooks
-        self.target_layer.register_forward_hook(self._save_activation)
-        self.target_layer.register_backward_hook(self._save_gradient)
+        # Register hooks (store handles for cleanup)
+        self._fwd_handle = self.target_layer.register_forward_hook(self._save_activation)
+        self._bwd_handle = self.target_layer.register_full_backward_hook(self._save_gradient)
+
+    def remove_hooks(self):
+        """Remove hooks to prevent memory leaks."""
+        self._fwd_handle.remove()
+        self._bwd_handle.remove()
 
     def _save_activation(self, module, input, output):
         """Hook to save forward activations."""
@@ -213,8 +218,19 @@ def visualize_learned_filters(
         layer_name: Name of conv layer to visualize
         save_path: Path to save figure
     """
-    # Get first conv layer
-    layer = dict(model.named_modules())[layer_name]
+    # Get conv layer by name
+    modules_dict = dict(model.named_modules())
+    layer = modules_dict.get(layer_name)
+    if layer is None:
+        # Fallback: find first Conv1d layer
+        import torch.nn as tnn
+        for name, module in model.named_modules():
+            if isinstance(module, tnn.Conv1d):
+                layer = module
+                layer_name = name
+                break
+    if layer is None:
+        raise ValueError(f"No conv layer found with name '{layer_name}'")
 
     # Get weights [out_channels, in_channels, kernel_size]
     weights = layer.weight.data.cpu().numpy()
@@ -253,15 +269,17 @@ if __name__ == "__main__":
 
     # Load model
     model = VibrationCNN(num_classes=10)
-    checkpoint = torch.load('./experiments/best_model.pth', map_location='cpu')
-    model.load_state_dict(checkpoint['model_state_dict'])
+    checkpoint = torch.load('./models/best_model.pth', map_location='cpu',
+                            weights_only=True)
+    model.load_state_dict(checkpoint)
     model.eval()
 
     # Create dummy input
     dummy_signal = torch.randn(1, 1, 2048)
 
     # Initialize Grad-CAM (target last conv layer before pooling)
-    target_layer = model.conv3
+    # model.features[10] is Conv1d(64, 128, kernel_size=16)
+    target_layer = model.features[10]
     gradcam = GradCAM1D(model, target_layer)
 
     # Generate visualization
@@ -279,6 +297,9 @@ if __name__ == "__main__":
         class_names=CLASS_LABELS
     )
 
-    # Visualize learned filters
+    # Clean up hooks
+    gradcam.remove_hooks()
+
+    # Visualize learned filters (features.0 is the first Conv1d)
     visualize_learned_filters(
-        model, layer_name='conv1', save_path='filters.png')
+        model, layer_name='features.0', save_path='filters.png')
