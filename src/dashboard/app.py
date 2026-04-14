@@ -53,14 +53,17 @@ from scipy.stats import kurtosis, skew
 # ============================================================
 # Project Module Imports
 # ============================================================
-try:
-    from src.models.vibration_cnn import VibrationCNN
-    from src.data.preprocessing import bandpass_filter, normalize_signal, create_windows
-    from src.interpretation.gradcam import GradCAM1D
-except ImportError as e:
-    st.error(f"Import error: {e}")
-    st.error("Make sure to run: pip install -e . from the project root directory.")
-    st.stop()
+import sys
+import os
+
+# Dynamically add the repo root so we never need 'pip install -e .'
+_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
+from src.models.vibration_cnn import VibrationCNN
+from src.data.preprocessing import bandpass_filter, normalize_signal, create_windows
+from src.interpretation.gradcam import GradCAM1D
 
 # ============================================================
 # Page Configuration
@@ -616,7 +619,7 @@ def main():
 
     if model_loaded:
         st.sidebar.success(f"Model loaded")
-        st.sidebar.caption(f"Path: {model_path}")
+        # st.sidebar.caption(f"Path: {model_path}")
     else:
         st.sidebar.error("Model not found")
         st.sidebar.caption("Train a model first: python main.py")
@@ -649,7 +652,7 @@ def main():
             options=list(CLASS_LABELS.keys()),
             format_func=lambda x: f"{x}: {CLASS_LABELS[x]}",
         )
-        st.sidebar.info(CLASS_DESCRIPTIONS[demo_class])
+        # st.sidebar.info(CLASS_DESCRIPTIONS[demo_class])
         if st.sidebar.button("Regenerate Signal"):
             st.rerun()
     elif input_mode == "Real-Time Simulation":
