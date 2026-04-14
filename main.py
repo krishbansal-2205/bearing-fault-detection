@@ -176,7 +176,8 @@ def main():
         lr=config['training']['learning_rate'],
         weight_decay=config['training']['weight_decay'],
         device=device,
-        early_stopping_patience=config['training']['early_stopping_patience']
+        early_stopping_patience=config['training']['early_stopping_patience'],
+        save_path=f"{config['paths']['model_dir']}/best_model.pth"
     )
 
     # Plot results

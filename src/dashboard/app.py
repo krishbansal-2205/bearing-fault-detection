@@ -221,7 +221,7 @@ def preprocess_signal(signal, fs=DEFAULT_FS):
     try:
         signal = bandpass_filter(signal, lowcut=10, highcut=5000, fs=fs)
     except Exception as e:
-        st.warning(f"Filter warning: {e}. Using raw signal.")
+        raise ValueError(f"Signal filtering failed: {e}")
 
     # Normalize
     signal = normalize_signal(signal, method='zscore')

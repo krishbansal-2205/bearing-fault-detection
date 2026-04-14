@@ -22,6 +22,7 @@ import logging
 from datetime import datetime
 from typing import List, Optional, Dict
 import time
+from contextlib import asynccontextmanager
 try:
     import onnxruntime as ort
 except ImportError:
@@ -37,13 +38,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Lifespan manager to replace startup event
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await load_model()
+    yield
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Bearing Fault Detection API",
     description="Real-time bearing health monitoring using deep learning",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # CORS middleware
@@ -98,7 +106,6 @@ class HealthResponse(BaseModel):
     timestamp: str
 
 
-@app.on_event("startup")
 async def load_model():
     """Load model on startup."""
     global MODEL, ONNX_SESSION, DEVICE
@@ -162,7 +169,8 @@ def preprocess_signal(signal: np.ndarray, fs: int = 12000) -> np.ndarray:
     try:
         signal = bandpass_filter(signal, lowcut=10, highcut=5000, fs=fs)
     except Exception as e:
-        logger.warning(f"Bandpass filter failed: {e}. Using raw signal.")
+        logger.error(f"Bandpass filter failed: {e}")
+        raise ValueError(f"Signal filtering failed: {e}")
 
     # Normalize
     signal = normalize_signal(signal, method='zscore')
@@ -321,7 +329,10 @@ async def predict_fault(
 
 
 @app.post("/predict/batch")
-async def predict_batch(files: List[UploadFile] = File(...)):
+async def predict_batch(
+    files: List[UploadFile] = File(...),
+    sampling_rate: int = 12000
+):
     """
     Batch prediction endpoint for multiple signals.
 
@@ -333,7 +344,7 @@ async def predict_batch(files: List[UploadFile] = File(...)):
 
     for file in files:
         try:
-            result = await predict_fault(file)
+            result = await predict_fault(file, sampling_rate=sampling_rate)
             results.append({
                 "filename": file.filename,
                 "prediction": result

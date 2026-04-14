@@ -40,8 +40,9 @@ class BearingDataset(Dataset):
 
         # Optional augmentation
         if self.augment and torch.rand(1).item() < 0.3:
-            # Add noise
-            noise = torch.randn_like(x) * 0.05
+            # Add noise (adaptive to signal scale)
+            sigma = x.std().item() * 0.05 if x.std().item() > 0 else 0.05
+            noise = torch.randn_like(x) * sigma
             x = x + noise
 
             # Random scaling
@@ -59,7 +60,8 @@ def train_model(
     lr: float = 0.001,
     weight_decay: float = 0.01,
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu',
-    early_stopping_patience: int = 10
+    early_stopping_patience: int = 10,
+    save_path: str = 'models/best_model.pth'
 ) -> Tuple[List[float], List[float], List[float], List[float], float]:
     """
     Train model with early stopping.
@@ -73,6 +75,7 @@ def train_model(
         weight_decay: L2 regularization
         device: Device to train on
         early_stopping_patience: Patience for early stopping
+        save_path: Path to save the best model
 
     Returns:
         train_losses, train_accs, test_losses, test_accs, best_test_acc
@@ -175,10 +178,11 @@ def train_model(
             patience_counter = 0
             # Save best model
             import os
-            os.makedirs('models', exist_ok=True)
+            if os.path.dirname(save_path):
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
             torch.save({
                 'model_state_dict': model.state_dict()
-            }, 'models/best_model.pth')
+            }, save_path)
         else:
             patience_counter += 1
 

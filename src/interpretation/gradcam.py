@@ -38,7 +38,7 @@ class GradCAM1D:
         self._fwd_handle = self.target_layer.register_forward_hook(self._save_activation)
         self._bwd_handle = self.target_layer.register_full_backward_hook(self._save_gradient)
 
-    def remove_hooks(self):
+    def cleanup(self):
         """Remove hooks to prevent memory leaks."""
         self._fwd_handle.remove()
         self._bwd_handle.remove()
