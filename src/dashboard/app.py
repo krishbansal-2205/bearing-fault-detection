@@ -663,9 +663,6 @@ def main():
         )
         auto_refresh = st.sidebar.checkbox("Auto-refresh", value=False)
         refresh_interval = st.sidebar.slider("Refresh interval (s)", 1, 10, 3)
-        if auto_refresh:
-            time.sleep(refresh_interval)
-            st.rerun()
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Display Options")
@@ -1021,6 +1018,10 @@ def main():
                 - Ball/rolling element defects at 0.007, 0.014, 0.021 inch severity
                 """
             )
+
+    if input_mode == "Real-Time Simulation" and auto_refresh:
+        time.sleep(refresh_interval)
+        st.rerun()
 
 
 if __name__ == "__main__":
